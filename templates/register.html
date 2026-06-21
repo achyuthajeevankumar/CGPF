@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="glass-card form-card">
+            <h2 class="form-title">Join Fellowship</h2>
+            <p class="form-subtitle">Create a user account to share and manage photos or videos related to our church events.</p>
+            
+            <form action="/register" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Choose a username" required minlength="3">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="yourname@domain.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required minlength="6">
+                    <span class="form-text">Must be at least 6 characters.</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Register</button>
+            </form>
+            
+            <div class="form-footer">
+                Already have an account? <a href="/login" style="color: var(--border-gold);">Login here</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

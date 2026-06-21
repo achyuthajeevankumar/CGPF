@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}About Pastor - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="detail-header" style="text-align: center;">
+    <div class="container">
+        <span class="subtitle-badge">Spiritual Leadership</span>
+        <h1 class="hero-title" style="font-size: 2.8rem; margin-bottom: 10px;">{% if pastor and pastor.name %}{{ pastor.name }}{% else %}Our Pastor{% endif %}</h1>
+        <p class="section-desc">Receive spiritual leadership, pastoral messages, and gospel testimonies.</p>
+    </div>
+</div>
+
+<section class="section" style="padding-top: 50px;">
+    <div class="container">
+        {% if pastor and pastor.about %}
+            <div class="glass-card" style="display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; padding: 40px;">
+                <!-- Pastor Photo Column -->
+                <div style="flex: 1; min-width: 250px; text-align: center;">
+                    {% if pastor.photo %}
+                        <img src="{{ pastor.photo }}" alt="{{ pastor.name }}" style="width: 100%; max-width: 300px; border-radius: 12px; border: 3px solid var(--border-gold); box-shadow: var(--glow-soft);">
+                    {% else %}
+                        <div class="profile-avatar-placeholder" style="width: 100%; max-width: 300px; height: 350px; margin: 0 auto; border-radius: 12px;">
+                            <i class="fas fa-bible fa-4x" style="color:var(--border-gold); margin-bottom:15px;"></i>
+                            <span style="font-size: 1.2rem;">Pastor</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div style="margin-top: 20px; font-family: var(--font-heading); font-size: 1.3rem; color: var(--border-gold);">
+                        {% if pastor.role %}{{ pastor.role }}{% else %}Pastor{% endif %}
+                    </div>
+                </div>
+
+                <!-- Biography Column -->
+                <div style="flex: 2; min-width: 300px;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">Pastoral Profile</h2>
+                    <p style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.8; color: var(--text-body);">{{ pastor.about }}</p>
+
+                    {% if pastor.message %}
+                        <div style="margin-top: 40px;">
+                            <h3 style="font-size: 1.3rem; color: var(--border-gold); margin-bottom: 15px;"><i class="fas fa-quote-left"></i> Pastoral Message</h3>
+                            <blockquote style="border-left: 3px solid var(--border-gold); padding: 5px 0 5px 20px; font-style: italic; font-size: 1.1rem; line-height: 1.6; color: var(--text-light);">
+                                "{{ pastor.message }}"
+                            </blockquote>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="coming-soon-wrapper" style="max-width: 700px; margin: 0 auto; padding: 80px 40px;">
+                <i class="fas fa-hourglass-start coming-soon-icon"></i>
+                <h3 class="coming-soon-title">Coming Soon</h3>
+                <p class="coming-soon-text">This section will be updated by the administration soon.</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 15px;">Back to Home</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

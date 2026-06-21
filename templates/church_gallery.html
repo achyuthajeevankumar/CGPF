@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Media Gallery - {{ church.name }} - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="detail-header" style="text-align: center;">
+    <div class="container">
+        <span class="subtitle-badge">Media Gallery</span>
+        <h1 class="hero-title" style="font-size: 2.8rem; margin-bottom: 10px;">{{ church.name }} Gallery</h1>
+        <p class="section-desc">View photos and video testimonies from our {{ church.name }} branch.</p>
+    </div>
+</div>
+
+<section class="section" style="padding-top: 40px;">
+    <div class="container">
+        <!-- Back Button and Upload Prompt -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 15px;">
+            <a href="/church/{{ church.id }}" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Back to Branch Details</a>
+            <a href="/dashboard#upload-media" class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Share Your Event Media</a>
+        </div>
+
+        <!-- Filter Tab Buttons (Handled via URL params or basic JS filter) -->
+        <div class="gallery-filter" style="margin-bottom: 40px; display: flex; justify-content: center; gap: 10px;">
+            <button class="btn btn-primary btn-sm filter-btn active" data-filter="all">All Media</button>
+            <button class="btn btn-outline btn-sm filter-btn" data-filter="image"><i class="fas fa-image"></i> Photos</button>
+            <button class="btn btn-outline btn-sm filter-btn" data-filter="video"><i class="fas fa-video"></i> Videos</button>
+        </div>
+
+        {% if media_items %}
+            <div class="gallery-grid" id="gallery-container">
+                {% for item in media_items %}
+                    <div class="gallery-item mix-item" data-type="{{ item.file_type }}">
+                        {% if item.file_type == 'image' %}
+                            <a href="{{ item.file_path }}" target="_blank" title="Click to view full image">
+                                <img src="{{ item.file_path }}" alt="{{ item.title }}" loading="lazy">
+                            </a>
+                        {% else %}
+                            <video src="{{ item.file_path }}" controls preload="metadata" style="object-fit: cover;"></video>
+                        {% endif %}
+                        <div class="gallery-overlay">
+                            <div class="gallery-item-title">{{ item.title }}</div>
+                            {% if item.description %}
+                                <div class="gallery-item-desc">{{ item.description }}</div>
+                            {% endif %}
+                            <div style="font-size:0.7rem; color:var(--border-gold); margin-top:5px;">
+                                <i class="fas fa-user"></i> Shared by {{ item.uploader.username }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="coming-soon-wrapper">
+                <i class="fas fa-photo-video coming-soon-icon"></i>
+                <h3 class="coming-soon-title">No Media Uploaded Yet</h3>
+                <p class="coming-soon-text">This gallery is currently empty. Registered members can upload photos and videos from their dashboard.</p>
+                <a href="/dashboard#upload-media" class="btn btn-primary" style="margin-top: 10px;">Upload Media</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    const items = document.querySelectorAll(".mix-item");
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            // Remove active class from all
+            filterButtons.forEach(b => {
+                b.classList.remove("btn-primary");
+                b.classList.remove("active");
+                b.classList.add("btn-outline");
+            });
+
+            // Set active class
+            btn.classList.add("btn-primary");
+            btn.classList.add("active");
+            btn.classList.remove("btn-outline");
+
+            const filterValue = btn.getAttribute("data-filter");
+
+            items.forEach(item => {
+                if (filterValue === "all") {
+                    item.style.display = "block";
+                } else {
+                    const itemType = item.getAttribute("data-type");
+                    if (itemType === filterValue) {
+                        item.style.display = "block";
+                    } else {
+                        item.style.display = "none";
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

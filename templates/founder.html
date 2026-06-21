@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}About Founder - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="detail-header" style="text-align: center;">
+    <div class="container">
+        <span class="subtitle-badge">Visionary & Founder</span>
+        <h1 class="hero-title" style="font-size: 2.8rem; margin-bottom: 10px;">కొనగంటి ప్రకాష్బాబు గారు</h1>
+        <p class="section-desc">Honoring the life, message, and ministry foundation laid by our beloved founder.</p>
+    </div>
+</div>
+
+<section class="section" style="padding-top: 50px;">
+    <div class="container">
+        {% if founder and founder.about %}
+            <div class="glass-card" style="display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; padding: 40px;">
+                <!-- Founder Photo Column -->
+                <div style="flex: 1; min-width: 250px; text-align: center;">
+                    {% if founder.photo %}
+                        <img src="{{ founder.photo }}" alt="{{ founder.name }}" style="width: 100%; max-width: 300px; border-radius: 12px; border: 3px solid var(--border-gold); box-shadow: var(--glow-soft);">
+                    {% else %}
+                        <div class="profile-avatar-placeholder" style="width: 100%; max-width: 300px; height: 350px; margin: 0 auto; border-radius: 12px;">
+                            <i class="fas fa-user-tie fa-4x" style="color:var(--border-gold); margin-bottom:15px;"></i>
+                            <span style="font-size: 1.2rem;">{{ founder.name }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if founder.birth_date or founder.death_date %}
+                        <div style="margin-top: 20px; font-family: var(--font-heading); font-size: 1.3rem; color: var(--border-gold);">
+                            {{ founder.birth_date|default('...') }} &mdash; {{ founder.death_date|default('...') }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Biography Column -->
+                <div style="flex: 2; min-width: 300px;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">Biography</h2>
+                    <p style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.8; color: var(--text-body);">{{ founder.about }}</p>
+
+                    {% if founder.highlights %}
+                        <h3 style="margin: 30px 0 15px; font-size: 1.5rem; color: var(--border-gold);"><i class="fas fa-award"></i> Key Ministry Highlights</h3>
+                        <ul style="padding-left: 20px; font-size: 1rem; color: var(--text-body); line-height: 1.8;">
+                            {% for highlight in founder.highlights.split('\n') %}
+                                {% if highlight.strip() %}
+                                    <li style="margin-bottom: 10px; list-style-type: square; color: var(--border-gold);"><span style="color: var(--text-body);">{{ highlight }}</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="coming-soon-wrapper" style="max-width: 700px; margin: 0 auto; padding: 80px 40px;">
+                <i class="fas fa-hourglass-start coming-soon-icon"></i>
+                <h3 class="coming-soon-title">Coming Soon</h3>
+                <p class="coming-soon-text">This section will be updated by the administration soon.</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 15px;">Back to Home</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

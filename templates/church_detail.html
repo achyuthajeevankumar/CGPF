@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ church.name }} - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+    <div class="container">
+        <span class="subtitle-badge">Church Branch Details</span>
+        <h1 class="hero-title" style="font-size: 3rem; text-align: left; margin-bottom: 10px;">{{ church.name }}</h1>
+        <p class="section-desc" style="text-align: left; margin: 0;"><i class="fas fa-map-marker-alt"></i> {{ church.address|default('Address coming soon', true) }}</p>
+    </div>
+</div>
+
+<section class="section" style="padding-top: 20px;">
+    <div class="container detail-container">
+        <!-- Left Side: Cover Image and About description -->
+        <div class="detail-main">
+            <div class="detail-cover">
+                {% if church.cover_image %}
+                    <img src="{{ church.cover_image }}" alt="{{ church.name }}">
+                {% else %}
+                    <div class="church-image-placeholder" style="height: 100%;">
+                        <i class="fas fa-church fa-4x"></i>
+                        <span style="font-size: 1.2rem;">Calvary Gospel Church</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="glass-card detail-content">
+                <h3>About This Branch</h3>
+                <p style="white-space: pre-wrap;">{% if church.about %}{{ church.about }}{% else %}This section will be updated by the administration soon.{% endif %}</p>
+            </div>
+
+            <!-- Media Gallery Preview -->
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; font-family: var(--font-heading); font-size: 1.4rem;">Media Highlights</h3>
+                    <a href="/church/{{ church.id }}/gallery" class="btn btn-secondary btn-sm"><i class="fas fa-images"></i> Full Gallery</a>
+                </div>
+
+                {% if media_highlights %}
+                    <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                        {% for item in media_highlights %}
+                            <div class="gallery-item" style="aspect-ratio: 16/10;">
+                                {% if item.file_type == 'image' %}
+                                    <img src="{{ item.file_path }}" alt="{{ item.title }}">
+                                {% else %}
+                                    <video src="{{ item.file_path }}" muted preload="metadata"></video>
+                                    <div class="media-play-btn" style="width:35px; height:35px; font-size:0.8rem;"><i class="fas fa-play"></i></div>
+                                {% endif %}
+                                <div class="gallery-overlay">
+                                    <div class="gallery-item-title" style="font-size: 0.85rem;">{{ item.title }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="coming-soon-wrapper" style="min-height: 150px; padding: 30px;">
+                        <i class="fas fa-photo-video coming-soon-icon" style="font-size: 2rem;"></i>
+                        <h4 class="coming-soon-title" style="font-size: 1.1rem;">No media uploaded yet</h4>
+                        <p class="coming-soon-text" style="font-size: 0.8rem;">Photos and videos for this branch will appear here once approved.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Side: Details, Timings, Map Link -->
+        <div class="detail-sidebar">
+            <div class="glass-card" style="border-color: var(--border-gold-low);">
+                <h3 style="font-size: 1.3rem; margin-bottom: 20px; color: var(--border-gold);"><i class="fas fa-info-circle"></i> Service Details</h3>
+                
+                <ul class="church-meta" style="font-size: 0.9rem;">
+                    <li style="margin-bottom: 15px;">
+                        <i class="fas fa-map-marker-alt" style="font-size: 1.1rem;"></i>
+                        <div>
+                            <strong>Location Address:</strong><br>
+                            <span style="display:inline-block; margin-top:5px;">{% if church.address %}{{ church.address }}{% else %}Address coming soon{% endif %}</span>
+                        </div>
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <i class="fas fa-clock" style="font-size: 1.1rem;"></i>
+                        <div>
+                            <strong>Service Timings:</strong><br>
+                            <span style="display:inline-block; margin-top:5px;">{% if church.timings %}{{ church.timings }}{% else %}Sunday services{% endif %}</span>
+                        </div>
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <i class="fas fa-phone-alt" style="font-size: 1.1rem;"></i>
+                        <div>
+                            <strong>Contact Information:</strong><br>
+                            <span style="display:inline-block; margin-top:5px;">{% if church.contact %}{{ church.contact }}{% else %}+91 97010 20668{% endif %}</span>
+                        </div>
+                    </li>
+                </ul>
+
+                {% if church.map_link %}
+                    <a href="{{ church.map_link }}" target="_blank" class="btn btn-primary" style="width: 100%; margin-top: 10px;"><i class="fas fa-directions"></i> Get Live Location Map</a>
+                {% else %}
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" disabled><i class="fas fa-directions"></i> Map Coming Soon</button>
+                {% endif %}
+            </div>
+
+            <div class="glass-card">
+                <h3 style="font-size: 1.2rem; margin-bottom: 15px;"><i class="fas fa-share-alt"></i> Share Branch</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Share this church branch with family and friends to invite them to our fellowship.</p>
+                <div style="display:flex; gap:10px;">
+                    <a href="https://api.whatsapp.com/send?text=Join+us+at+Calvary+Gospel+Prayer+Fellowship+-+{{ church.name }}.+Details:+{{ request.url }}" target="_blank" class="btn btn-outline btn-sm" style="flex:1; justify-content:center; color:#25d366; border-color:#25d366;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

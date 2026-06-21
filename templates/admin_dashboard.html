@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="container">
+        
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="hero-title" style="font-size: 2.2rem; text-align: left; margin-bottom: 5px; color: var(--border-gold);">Administrator Control Panel</h1>
+                <p class="section-desc" style="text-align: left; margin: 0;">Perform content management, moderate uploaded media, and configure system settings.</p>
+            </div>
+            <a href="/logout" class="btn btn-secondary btn-sm"><i class="fas fa-sign-out-alt"></i> Logout Admin</a>
+        </div>
+
+        <!-- Admin Stats Counters -->
+        <div class="dashboard-stats">
+            <div class="glass-card stat-card">
+                <i class="fas fa-users fa-2x" style="color: var(--border-gold);"></i>
+                <div class="stat-number">{{ total_users }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Total Users</div>
+            </div>
+            <div class="glass-card stat-card">
+                <i class="fas fa-church fa-2x" style="color: var(--border-gold);"></i>
+                <div class="stat-number">{{ total_churches }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Churches</div>
+            </div>
+            <div class="glass-card stat-card">
+                <i class="fas fa-image fa-2x" style="color: var(--border-gold);"></i>
+                <div class="stat-number">{{ total_photos }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Photos</div>
+            </div>
+            <div class="glass-card stat-card">
+                <i class="fas fa-video fa-2x" style="color: var(--border-gold);"></i>
+                <div class="stat-number">{{ total_videos }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Videos</div>
+            </div>
+        </div>
+
+        <div class="dashboard-content-layout">
+            
+            <!-- Admin Sidebar Menu -->
+            <aside>
+                <ul class="admin-sidebar-menu">
+                    <li><a href="#churches" data-tab-target="churches" class="active"><i class="fas fa-church"></i> Churches</a></li>
+                    <li><a href="#media" data-tab-target="media"><i class="fas fa-photo-video"></i> Media Moderation</a></li>
+                    <li><a href="#founder" data-tab-target="founder"><i class="fas fa-user-tie"></i> Founder Bio</a></li>
+                    <li><a href="#pastor" data-tab-target="pastor"><i class="fas fa-bible"></i> Pastor Bio</a></li>
+                    <li><a href="#settings" data-tab-target="settings"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="#users" data-tab-target="users"><i class="fas fa-users-cog"></i> Users List</a></li>
+                    <li><a href="#audit-log" data-tab-target="audit-log"><i class="fas fa-history"></i> Audit Logs</a></li>
+                </ul>
+            </aside>
+
+            <!-- Admin Contents Panels -->
+            <section style="flex: 1;">
+                
+                <!-- TAB 1: CHURCHES MANAGEMENT -->
+                <div id="churches" class="dashboard-tab-content active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin: 0; text-transform: capitalize;">Manage Church Branches</h2>
+                        <button class="btn btn-primary btn-sm" data-modal-open="add-church-modal"><i class="fas fa-plus-circle"></i> Add Church</button>
+                    </div>
+
+                    <div class="glass-card" style="padding: 15px;">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cover</th>
+                                        <th>Name</th>
+                                        <th>Address</th>
+                                        <th>Contact</th>
+                                        <th>Service Timings</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for church in churches %}
+                                        <tr>
+                                            <td>
+                                                {% if church.cover_image %}
+                                                    <img src="{{ church.cover_image }}" alt="{{ church.name }}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                {% else %}
+                                                    <div style="width: 60px; height: 40px; background:#122046; border-radius:4px; display:flex; align-items:center; justify-content:center;">
+                                                        <i class="fas fa-church" style="font-size:0.8rem; color:var(--border-gold);"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td><strong>{{ church.name }}</strong></td>
+                                            <td>{{ church.address|default('--', true) }}</td>
+                                            <td>{{ church.contact|default('--', true) }}</td>
+                                            <td><small>{{ church.timings|default('--', true) }}</small></td>
+                                            <td>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <button class="btn btn-outline btn-sm" style="padding:4px 8px; font-size:0.75rem;" data-modal-open="edit-church-modal-{{ church.id }}"><i class="fas fa-edit"></i> Edit</button>
+                                                    <form action="/admin/churches/delete/{{ church.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this church? This will delete all media associated with it.');">
+                                                        <button type="submit" class="btn btn-danger btn-sm" style="padding:4px 8px; font-size:0.75rem;"><i class="fas fa-trash-alt"></i> Del</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Edit Church Modal inside Loop -->
+                                        <div id="edit-church-modal-{{ church.id }}" class="modal">
+                                            <div class="modal-backdrop"></div>
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h3 class="modal-title">Edit Church: {{ church.name }}</h3>
+                                                    <button class="modal-close">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form action="/admin/churches/edit/{{ church.id }}" method="POST" enctype="multipart/form-data">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Church Name</label>
+                                                            <input type="text" name="name" class="form-control" value="{{ church.name }}" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Address</label>
+                                                            <input type="text" name="address" class="form-control" value="{{ church.address|default('', true) }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Google Maps Link</label>
+                                                            <input type="url" name="map_link" class="form-control" value="{{ church.map_link|default('', true) }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Contact Number</label>
+                                                            <input type="text" name="contact" class="form-control" value="{{ church.contact|default('', true) }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Service Timings</label>
+                                                            <input type="text" name="timings" class="form-control" value="{{ church.timings|default('', true) }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">About Section</label>
+                                                            <textarea name="about" class="form-control" rows="4">{{ church.about|default('', true) }}</textarea>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Update Cover Image</label>
+                                                            <input type="file" name="cover_image" class="form-control" accept="image/*">
+                                                            {% if church.cover_image %}
+                                                                <div style="margin-top: 10px;">
+                                                                    <span style="font-size:0.8rem; color:var(--text-muted);">Current:</span><br>
+                                                                    <img src="{{ church.cover_image }}" style="width:100px; height:60px; object-fit:cover; border-radius:4px;">
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:15px;">Save Changes</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: MEDIA MODERATION -->
+                <div id="media" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Media Moderation Panel</h2>
+                    
+                    <div class="glass-card" style="padding: 15px;">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Preview</th>
+                                        <th>Details</th>
+                                        <th>Church</th>
+                                        <th>Uploader</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Moderation Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in media_items %}
+                                        <tr>
+                                            <td>
+                                                {% if item.file_type == 'image' %}
+                                                    <a href="{{ item.file_path }}" target="_blank">
+                                                        <img src="{{ item.file_path }}" alt="{{ item.title }}" style="width: 60px; height: 45px; object-fit: cover; border-radius: 4px;">
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ item.file_path }}" target="_blank">
+                                                        <div style="width: 60px; height: 45px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-play" style="color:var(--border-gold); font-size:0.8rem;"></i>
+                                                        </div>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong>{{ item.title }}</strong>
+                                                <div style="font-size:0.75rem; color:var(--text-muted);">{{ item.description|default('', true) }}</div>
+                                            </td>
+                                            <td>{{ item.church.name }}</td>
+                                            <td>{{ item.uploader.username }}</td>
+                                            <td><span style="text-transform: capitalize;">{{ item.file_type }}</span></td>
+                                            <td><span class="badge badge-{{ item.status }}">{{ item.status }}</span></td>
+                                            <td>
+                                                <div style="display: flex; gap: 6px;">
+                                                    {% if item.status != 'approved' %}
+                                                        <form action="/admin/media/approve/{{ item.id }}" method="POST">
+                                                            <button type="submit" class="btn btn-primary btn-sm" style="padding:4px 8px; font-size:0.75rem; background:#10b981; color:#fff;"><i class="fas fa-check"></i> Appr</button>
+                                                        </form>
+                                                    {% endif %}
+                                                    {% if item.status != 'rejected' %}
+                                                        <form action="/admin/media/reject/{{ item.id }}" method="POST">
+                                                            <button type="submit" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem; color:#ef4444; border-color:#ef4444;"><i class="fas fa-times"></i> Rej</button>
+                                                        </form>
+                                                    {% endif %}
+                                                    <form action="/admin/media/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this media?');">
+                                                        <button type="submit" class="btn btn-danger btn-sm" style="padding:4px 8px; font-size:0.75rem;"><i class="fas fa-trash"></i> Del</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: FOUNDER BIO -->
+                <div id="founder" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Founder Profile Details</h2>
+                    
+                    <div class="glass-card">
+                        <form action="/admin/founder" method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label class="form-label">Founder Name</label>
+                                <input type="text" name="name" class="form-control" value="{% if founder %}{{ founder.name }}{% else %}కొనగంటి ప్రకాష్బాబు గారు{% endif %}" required>
+                            </div>
+                            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div>
+                                    <label class="form-label">Birth Date</label>
+                                    <input type="text" name="birth_date" class="form-control" placeholder="e.g. 1950-01-01" value="{{ founder.birth_date|default('', true) if founder }}">
+                                </div>
+                                <div>
+                                    <label class="form-label">Death Date</label>
+                                    <input type="text" name="death_date" class="form-control" placeholder="e.g. 2020-01-01" value="{{ founder.death_date|default('', true) if founder }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Biography (Full Text)</label>
+                                <textarea name="about" class="form-control" rows="6" placeholder="Write comprehensive details about the founder...">{{ founder.about|default('', true) if founder }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Key Milestones / Highlights (One per line)</label>
+                                <textarea name="highlights" class="form-control" rows="4" placeholder="e.g. Started Ministry in 1980&#10;Built Dubacherla church in 1985">{{ founder.highlights|default('', true) if founder }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Upload Founder Photo</label>
+                                <input type="file" name="photo" class="form-control" accept="image/*">
+                                {% if founder and founder.photo %}
+                                    <div style="margin-top: 10px;">
+                                        <span style="font-size:0.8rem; color:var(--text-muted);">Current Photo:</span><br>
+                                        <img src="{{ founder.photo }}" style="width:100px; height:120px; object-fit:cover; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-save"></i> Save Founder Bio</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 4: PASTOR BIO -->
+                <div id="pastor" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Pastor Profile Details</h2>
+                    
+                    <div class="glass-card">
+                        <form action="/admin/pastor" method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label class="form-label">Pastor Name</label>
+                                <input type="text" name="name" class="form-control" value="{{ pastor.name|default('', true) if pastor }}" placeholder="e.g. Rev. K. Prakash Babu Jr." required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role Title</label>
+                                <input type="text" name="role" class="form-control" value="{{ pastor.role|default('Pastor', true) if pastor }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Biography (Full Text)</label>
+                                <textarea name="about" class="form-control" rows="6" placeholder="Write biography or message about the pastor...">{{ pastor.about|default('', true) if pastor }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pastor's Sermon Message</label>
+                                <textarea name="message" class="form-control" rows="4" placeholder="Personal quote or welcome message from pastor...">{{ pastor.message|default('', true) if pastor }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Upload Pastor Photo</label>
+                                <input type="file" name="photo" class="form-control" accept="image/*">
+                                {% if pastor and pastor.photo %}
+                                    <div style="margin-top: 10px;">
+                                        <span style="font-size:0.8rem; color:var(--text-muted);">Current Photo:</span><br>
+                                        <img src="{{ pastor.photo }}" style="width:100px; height:120px; object-fit:cover; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-save"></i> Save Pastor Bio</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 5: SETTINGS -->
+                <div id="settings" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Global Web Settings</h2>
+                    
+                    <div class="glass-card">
+                        <form action="/settings" method="POST">
+                            <div class="form-group">
+                                <label class="form-label">YouTube Video / Channel Link</label>
+                                <input type="url" name="youtube_link" class="form-control" value="{{ global_settings.youtube_link|default('', true) if global_settings }}" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;">
+                                <span class="form-text">Paste the direct link to a featured YouTube sermon or video to display it on the homepage.</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hero Banner Title</label>
+                                <input type="text" name="hero_title" class="form-control" value="{{ global_settings.hero_title|default('Welcome to Calvary Gospel Prayer Fellowship', true) if global_settings }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hero Banner Subtitle</label>
+                                <input type="text" name="hero_subtitle" class="form-control" value="{{ global_settings.hero_subtitle|default('Experience the blessings and grace of our Lord Jesus Christ', true) if global_settings }}">
+                            </div>
+                            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div>
+                                    <label class="form-label">Global Phone Contact</label>
+                                    <input type="text" name="contact_phone" class="form-control" value="{{ global_settings.contact_phone|default('+91 97010 20668', true) if global_settings }}">
+                                </div>
+                                <div>
+                                    <label class="form-label">Global Email Contact</label>
+                                    <input type="email" name="contact_email" class="form-control" value="{{ global_settings.contact_email|default('info@calvarygospel.org', true) if global_settings }}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-save"></i> Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 6: USERS LIST -->
+                <div id="users" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Registered Users</h2>
+                    
+                    <div class="glass-card" style="padding: 15px;">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email Address</th>
+                                        <th>System Role</th>
+                                        <th>Registered Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td><strong>{{ user.username }}</strong></td>
+                                            <td>{{ user.email }}</td>
+                                            <td><span class="badge badge-{{ user.role }}">{{ user.role }}</span></td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 7: AUDIT LOGS -->
+                <div id="audit-log" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">System Activity Logs</h2>
+                    
+                    <div class="glass-card" style="padding: 15px;">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User ID</th>
+                                        <th>Action Description</th>
+                                        <th>Target Table</th>
+                                        <th>Target ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in audit_logs %}
+                                        <tr>
+                                            <td><small>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></td>
+                                            <td>{{ log.user_id|default('System/Visitor', true) }}</td>
+                                            <td><code>{{ log.action }}</code></td>
+                                            <td>{{ log.target_type }}</td>
+                                            <td>{{ log.target_id|default('--', true) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Church -->
+<div id="add-church-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add New Church branch</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form action="/admin/churches/add" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">Church Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Marelamudi" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <input type="text" name="address" class="form-control" placeholder="Full postal address">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Google Map Location Link</label>
+                    <input type="url" name="map_link" class="form-control" placeholder="https://maps.app.goo.gl/...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact phone</label>
+                    <input type="text" name="contact" class="form-control" placeholder="+91 97010 20668" value="+91 97010 20668">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Timings</label>
+                    <input type="text" name="timings" class="form-control" placeholder="e.g. Sunday morning 8:00 to 10:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">About text details</label>
+                    <textarea name="about" class="form-control" rows="3" placeholder="Brief history or message about this branch..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Church Cover image</label>
+                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;"><i class="fas fa-plus"></i> Create Church Branch</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

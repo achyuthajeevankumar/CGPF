@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<!-- Divine Light Beam Background Overlay -->
+<div class="hero">
+    <div class="divine-light"></div>
+    <div class="container hero-content">
+        <span class="hero-subtitle">{% if global_settings and global_settings.hero_subtitle %}{{ global_settings.hero_subtitle }}{% else %}Experience His Blessings & Grace{% endif %}</span>
+        <h1 class="hero-title">{% if global_settings and global_settings.hero_title %}{{ global_settings.hero_title }}{% else %}Calvary Gospel Prayer Fellowship{% endif %}</h1>
+        <p class="hero-desc">Welcome to our community of believers. Let us gather together in prayer, fellowship, and praise. Discover our church branches, watch dynamic sermons, and grow in faith.</p>
+        <div class="hero-buttons">
+            <a href="#churches" class="btn btn-primary">Our Churches</a>
+            <a href="#youtube-stream" class="btn btn-outline">Watch Live</a>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar Section -->
+<div class="container search-section">
+    <div class="search-container">
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="q" class="search-input" placeholder="Search churches by name (e.g. Dubacherla)..." required>
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Churches Grid Section -->
+<section id="churches" class="section">
+    <div class="container">
+        <div class="section-title-wrap">
+            <span class="subtitle-badge">Congregations</span>
+            <h2 class="section-title">Our Church Branches</h2>
+            <p class="section-desc">Gather with us at any of our branches. Find details, timings, and driving directions below.</p>
+        </div>
+
+        <div class="churches-grid">
+            {% for church in churches %}
+                <div class="glass-card church-card">
+                    <div class="church-card-image">
+                        {% if church.cover_image %}
+                            <img src="{{ church.cover_image }}" alt="{{ church.name }}">
+                        {% else %}
+                            <div class="church-image-placeholder">
+                                <i class="fas fa-church"></i>
+                                <span>Calvary Gospel Church</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="church-info">
+                        <h3 class="church-name">{{ church.name }}</h3>
+                        <ul class="church-meta">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{% if church.address %}{{ church.address }}{% else %}<em class="text-muted">Address coming soon</em>{% endif %}</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone-alt"></i>
+                                <span>{% if church.contact %}{{ church.contact }}{% else %}+91 97010 20668{% endif %}</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>{% if church.timings %}{{ church.timings }}{% else %}Sunday services{% endif %}</span>
+                            </li>
+                        </ul>
+                        <div class="church-actions">
+                            {% if church.map_link %}
+                                <a href="{{ church.map_link }}" target="_blank" class="btn btn-secondary"><i class="fas fa-map-marked-alt"></i> Location</a>
+                            {% else %}
+                                <button class="btn btn-secondary" disabled><i class="fas fa-map-marked-alt"></i> Coming Soon</button>
+                            {% endif %}
+                            <a href="/church/{{ church.id }}" class="btn btn-primary">Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Profiles Section (Founder & Pastor) -->
+<section id="profiles" class="section" style="background: rgba(3, 8, 22, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.03);">
+    <div class="container">
+        <div class="section-title-wrap">
+            <span class="subtitle-badge">Leadership</span>
+            <h2 class="section-title">Spiritual Guidance</h2>
+            <p class="section-desc">Honoring our visionary founder and receiving blessings from our pastor.</p>
+        </div>
+
+        <div class="profiles-wrap">
+            <!-- Founder Profile Block -->
+            <div class="glass-card profile-card">
+                <div class="profile-avatar">
+                    {% if founder and founder.photo %}
+                        <img src="{{ founder.photo }}" alt="{{ founder.name }}">
+                    {% else %}
+                        <div class="profile-avatar-placeholder">
+                            <i class="fas fa-user-tie fa-3x" style="color:var(--border-gold); margin-bottom:10px;"></i>
+                            <span>{{ founder.name }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <span class="profile-role">Founder</span>
+                    <h3 class="profile-name">{{ founder.name }}</h3>
+                    <div class="profile-excerpt">
+                        {% if founder and founder.about %}
+                            {{ founder.about }}
+                        {% else %}
+                            This section will be updated by the administration soon.
+                        {% endif %}
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <a href="/founder" class="btn btn-primary btn-sm">About Founder</a>
+                        <button class="btn btn-secondary btn-sm" data-modal-open="founder-modal">Quick View</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pastor Profile Block -->
+            <div class="glass-card profile-card">
+                <div class="profile-avatar">
+                    {% if pastor and pastor.photo %}
+                        <img src="{{ pastor.photo }}" alt="{{ pastor.name }}">
+                    {% else %}
+                        <div class="profile-avatar-placeholder">
+                            <i class="fas fa-bible fa-3x" style="color:var(--border-gold); margin-bottom:10px;"></i>
+                            <span>Pastor</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <span class="profile-role">{% if pastor and pastor.role %}{{ pastor.role }}{% else %}Pastor{% endif %}</span>
+                    <h3 class="profile-name">{% if pastor and pastor.name %}{{ pastor.name }}{% else %}Pastor Profile{% endif %}</h3>
+                    <div class="profile-excerpt">
+                        {% if pastor and pastor.about %}
+                            {{ pastor.about }}
+                        {% else %}
+                            This section will be updated by the administration soon.
+                        {% endif %}
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <a href="/pastor" class="btn btn-primary btn-sm">About Pastor</a>
+                        <button class="btn btn-secondary btn-sm" data-modal-open="pastor-modal">Quick View</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- YouTube Broadcast Live Section -->
+<section id="youtube-stream" class="section youtube-section">
+    <div class="container">
+        <div class="section-title-wrap">
+            <span class="subtitle-badge">Broadcast</span>
+            <h2 class="section-title">YouTube Channel & Sermons</h2>
+            <p class="section-desc">Watch our live fellowship broadcasts, sermons, and devotional videos.</p>
+        </div>
+
+        <div class="youtube-wrapper">
+            {% if global_settings and global_settings.youtube_link %}
+                {% if 'youtube.com/embed/' in global_settings.youtube_link %}
+                    <div class="youtube-video-container">
+                        <iframe src="{{ global_settings.youtube_link }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                {% elif 'watch?v=' in global_settings.youtube_link %}
+                    {% set yt_id = global_settings.youtube_link.split('v=')[1].split('&')[0] %}
+                    <div class="youtube-video-container">
+                        <iframe src="https://www.youtube.com/embed/{{ yt_id }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                {% elif 'youtu.be/' in global_settings.youtube_link %}
+                    {% set yt_id = global_settings.youtube_link.split('youtu.be/')[1].split('?')[0] %}
+                    <div class="youtube-video-container">
+                        <iframe src="https://www.youtube.com/embed/{{ yt_id }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                {% else %}
+                    <!-- Plain link channel redirect -->
+                    <div class="coming-soon-wrapper">
+                        <i class="fab fa-youtube coming-soon-icon"></i>
+                        <h3 class="coming-soon-title">Visit Our YouTube Channel</h3>
+                        <p class="coming-soon-text">Click the link below to watch our streams directly on YouTube.</p>
+                        <a href="{{ global_settings.youtube_link }}" target="_blank" class="btn btn-primary"><i class="fab fa-youtube"></i> Watch on YouTube</a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="coming-soon-wrapper">
+                    <i class="fab fa-youtube coming-soon-icon"></i>
+                    <h3 class="coming-soon-title">Coming Soon</h3>
+                    <p class="coming-soon-text">This section will be updated by the administration soon.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Modals for Leadership Details -->
+<div id="founder-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Founder Details</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align:center; margin-bottom:20px;">
+                {% if founder and founder.photo %}
+                    <img src="{{ founder.photo }}" alt="{{ founder.name }}" style="width:150px; height:180px; object-fit:cover; border-radius:8px; border:2px solid var(--border-gold);">
+                {% endif %}
+                <h4 style="margin-top:10px; font-size:1.4rem;">{{ founder.name }}</h4>
+                {% if founder and (founder.birth_date or founder.death_date) %}
+                    <p class="text-muted" style="font-size:0.9rem; color:var(--border-gold);">
+                        {{ founder.birth_date|default('...') }} - {{ founder.death_date|default('...') }}
+                    </p>
+                {% endif %}
+            </div>
+            
+            {% if founder and founder.about %}
+                <p>{{ founder.about }}</p>
+                {% if founder.highlights %}
+                    <h5 style="margin: 15px 0 10px; color: var(--border-gold);">Key Highlights:</h5>
+                    <div style="font-size:0.95rem; color: var(--text-body);">
+                        {{ founder.highlights|replace('\n', '<br>')|safe }}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="coming-soon-wrapper">
+                    <i class="fas fa-hourglass-start coming-soon-icon"></i>
+                    <h3 class="coming-soon-title">Coming Soon</h3>
+                    <p class="coming-soon-text">This section will be updated by the administration soon.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="pastor-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Pastor Details</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align:center; margin-bottom:20px;">
+                {% if pastor and pastor.photo %}
+                    <img src="{{ pastor.photo }}" alt="{{ pastor.name }}" style="width:150px; height:180px; object-fit:cover; border-radius:8px; border:2px solid var(--border-gold);">
+                {% endif %}
+                <h4 style="margin-top:10px; font-size:1.4rem;">{% if pastor and pastor.name %}{{ pastor.name }}{% else %}Pastor Profile{% endif %}</h4>
+                <p class="text-muted" style="font-size:0.9rem; color:var(--border-gold);">{% if pastor and pastor.role %}{{ pastor.role }}{% else %}Pastor{% endif %}</p>
+            </div>
+            
+            {% if pastor and pastor.about %}
+                <p>{{ pastor.about }}</p>
+                {% if pastor.message %}
+                    <blockquote style="border-left: 3px solid var(--border-gold); padding-left: 15px; font-style: italic; margin-top: 20px; color: var(--text-light);">
+                        "{{ pastor.message }}"
+                    </blockquote>
+                {% endif %}
+            {% else %}
+                <div class="coming-soon-wrapper">
+                    <i class="fas fa-hourglass-start coming-soon-icon"></i>
+                    <h3 class="coming-soon-title">Coming Soon</h3>
+                    <p class="coming-soon-text">This section will be updated by the administration soon.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

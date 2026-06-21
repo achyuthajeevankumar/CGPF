@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="glass-card form-card">
+            <h2 class="form-title">Member Login</h2>
+            <p class="form-subtitle">Log in to upload and manage media for our church branches.</p>
+            
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username or Email</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter username or email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Login</button>
+            </form>
+            
+            <div class="form-footer">
+                Don't have an account yet? <a href="/register" style="color: var(--border-gold);">Register here</a>
+                <div style="margin-top: 15px; font-size: 0.8rem;">
+                    Are you an administrator? <a href="/admin/login" style="color: #ffffff; text-decoration: underline;">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

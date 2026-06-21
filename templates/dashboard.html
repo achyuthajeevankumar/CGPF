@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="hero-title" style="font-size: 2.2rem; text-align: left; margin-bottom: 5px;">Member Dashboard</h1>
+                <p class="section-desc" style="text-align: left; margin: 0;">Welcome back, <strong>{{ current_user.username }}</strong>. Share what's happening at our churches.</p>
+            </div>
+            <a href="/logout" class="btn btn-secondary btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+
+        <!-- Dashboard Stats Grid -->
+        <div class="dashboard-stats">
+            <div class="glass-card stat-card">
+                <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--border-gold);"></i>
+                <div class="stat-number">{{ total_uploads }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Total Uploads</div>
+            </div>
+            <div class="glass-card stat-card">
+                <i class="fas fa-check-circle fa-2x" style="color: #10b981;"></i>
+                <div class="stat-number">{{ approved_uploads }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Approved</div>
+            </div>
+            <div class="glass-card stat-card">
+                <i class="fas fa-clock fa-2x" style="color: #f59e0b;"></i>
+                <div class="stat-number">{{ pending_uploads }}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Pending Approval</div>
+            </div>
+        </div>
+
+        <div class="dashboard-content-layout">
+            <!-- Sidebar Navigation -->
+            <aside>
+                <ul class="admin-sidebar-menu">
+                    <li><a href="#my-media" data-tab-target="my-media" class="active"><i class="fas fa-images"></i> My Uploads</a></li>
+                    <li><a href="#upload-media" data-tab-target="upload-media"><i class="fas fa-plus-circle"></i> Upload New Media</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content Panels -->
+            <section style="flex: 1;">
+                <!-- Tab 1: My Media Uploads -->
+                <div id="my-media" class="dashboard-tab-content active">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">My Uploaded Media</h2>
+                    
+                    {% if media_items %}
+                        <div class="glass-card" style="padding: 15px;">
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Media</th>
+                                            <th>Title</th>
+                                            <th>Church Branch</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                            <th>Uploaded On</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in media_items %}
+                                            <tr>
+                                                <td style="width: 80px;">
+                                                    {% if item.file_type == 'image' %}
+                                                        <img src="{{ item.file_path }}" alt="{{ item.title }}" style="width: 60px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                                                    {% else %}
+                                                        <div style="width: 60px; height: 45px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1);">
+                                                            <i class="fas fa-video" style="color:var(--border-gold)"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <strong>{{ item.title }}</strong>
+                                                    {% if item.description %}
+                                                        <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                            {{ item.description }}
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ item.church.name }}</td>
+                                                <td>
+                                                    <span style="text-transform: capitalize;">
+                                                        <i class="fas {% if item.file_type == 'image' %}fa-image{% else %}fa-video{% endif %}"></i> {{ item.file_type }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-{{ item.status }}">{{ item.status }}</span>
+                                                </td>
+                                                <td>{{ item.created_at.strftime('%Y-%m-%d') }}</td>
+                                                <td>
+                                                    <!-- Delete action -->
+                                                    <form action="/media/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this media?');">
+                                                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fas fa-trash-alt"></i> Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="coming-soon-wrapper">
+                            <i class="fas fa-images coming-soon-icon"></i>
+                            <h3 class="coming-soon-title">No Media Uploaded Yet</h3>
+                            <p class="coming-soon-text">You haven't uploaded any photos or videos. Click the button below to upload your first event media!</p>
+                            <a href="#upload-media" data-tab-target="upload-media" class="btn btn-primary" style="margin-top: 10px;">Upload Now</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab 2: Upload Form -->
+                <div id="upload-media" class="dashboard-tab-content">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.6rem; margin-bottom: 20px; text-transform: capitalize;">Upload Church Media</h2>
+                    
+                    <div class="glass-card">
+                        <form id="upload-media-form" action="/upload" method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label class="form-label" for="church_id">Select Church Branch</label>
+                                <select id="church_id" name="church_id" class="form-control" required style="background-color: var(--bg-deep);">
+                                    <option value="" disabled selected>-- Choose a congregation --</option>
+                                    {% for church in churches %}
+                                        <option value="{{ church.id }}">{{ church.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="title">Title</label>
+                                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Sunday Service worship, Christmas Event" required minlength="3">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="description">Description (Optional)</label>
+                                <textarea id="description" name="description" class="form-control" rows="3" placeholder="Brief details about the event, date or time..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="file">Choose Photo or Video File</label>
+                                <input type="file" id="file" name="file" class="form-control" required accept="image/*,video/*">
+                                <span class="form-text">Allowed image formats: JPG, PNG, WEBP (Max 5MB). Video formats: MP4, MOV, WEBM (Max 50MB).</span>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="margin-top: 10px;"><i class="fas fa-cloud-upload-alt"></i> Upload for Approval</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

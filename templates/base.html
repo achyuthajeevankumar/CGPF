@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Calvary Gospel Prayer Fellowship{% endblock %}</title>
+    <meta name="description" content="Official website of Calvary Gospel Prayer Fellowship. Connect with our locations, watch sermons, view our media galleries, and find peace in prayer.">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Flash Notification Container -->
+    <div class="flash-container">
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {% if category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif category == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="/">
+                    <span class="logo-main">Calvary Gospel</span>
+                    <span class="logo-sub">Prayer Fellowship</span>
+                </a>
+            </div>
+            
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
+                    <li><a href="/founder" class="{% if active_page == 'founder' %}active{% endif %}">Founder</a></li>
+                    <li><a href="/pastor" class="{% if active_page == 'pastor' %}active{% endif %}">Pastor</a></li>
+                    
+                    {% if current_user %}
+                        {% if current_user.role == 'admin' %}
+                            <li><a href="/admin/dashboard" class="{% if active_page == 'admin_dashboard' %}active{% endif %}">Admin Panel</a></li>
+                        {% else %}
+                            <li><a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">My Dashboard</a></li>
+                        {% endif %}
+                        <li><a href="/logout" class="btn btn-secondary btn-sm" style="color:#d4af37">Logout ({{ current_user.username }})</a></li>
+                    {% else %}
+                        <li><a href="/login" class="{% if active_page == 'login' %}active{% endif %}">Login</a></li>
+                        <li><a href="/register" class="btn btn-primary btn-sm" style="color:#030816">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <button class="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Injection -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-col footer-about">
+                <h4>Calvary Gospel Prayer Fellowship</h4>
+                <p>Establishing faith, sharing the divine gospel, and building communities of prayer across our local congregations. Join us to experience the transformative love and blessings of Jesus Christ.</p>
+                <div class="social-links" style="display:flex; gap:15px; font-size:1.2rem;">
+                    {% if global_settings and global_settings.youtube_link %}
+                        <a href="{{ global_settings.youtube_link }}" target="_blank" style="color:#ff0000;" title="YouTube Channel"><i class="fab fa-youtube"></i></a>
+                    {% endif %}
+                    <a href="#" style="color:#1877f2;"><i class="fab fa-facebook"></i></a>
+                    <a href="#" style="color:#e1306c;"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/founder">About Founder</a></li>
+                    <li><a href="/pastor">About Pastor</a></li>
+                    <li><a href="/login">User Login</a></li>
+                    <li><a href="/admin/login">Admin Administration</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <ul class="footer-contact">
+                    <li>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Dubacherla & surrounding mandals, Andhra Pradesh, India</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone-alt"></i>
+                        <span>{% if global_settings and global_settings.contact_phone %}{{ global_settings.contact_phone }}{% else %}+91 97010 20668{% endif %}</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope"></i>
+                        <span>{% if global_settings and global_settings.contact_email %}{{ global_settings.contact_email }}{% else %}info@calvarygospel.org{% endif %}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container footer-bottom">
+            <p>&copy; 2026 Calvary Gospel Prayer Fellowship. All Rights Reserved.</p>
+            <p style="margin-top: 5px;">Founder Display Name: <span class="footer-bottom-name">కొనగంటి ప్రకాష్బాబు గారు</span></p>
+        </div>
+    </footer>
+
+    <!-- Core Client Script -->
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

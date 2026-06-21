@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Calvary Gospel Prayer Fellowship{% endblock %}
+
+{% block content %}
+<div class="detail-header" style="text-align: center;">
+    <div class="container">
+        <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 10px;">Search Results</h1>
+        <p class="section-desc">Search results for "{{ query }}"</p>
+    </div>
+</div>
+
+<section class="section" style="padding-top: 50px;">
+    <div class="container">
+        <!-- Search bar inside results page for retry -->
+        <div class="search-container" style="margin-bottom: 50px; max-width: 600px;">
+            <form action="/search" method="GET" class="search-form">
+                <input type="text" name="q" class="search-input" value="{{ query }}" placeholder="Search another branch..." required>
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </form>
+        </div>
+
+        {% if churches %}
+            <div class="churches-grid">
+                {% for church in churches %}
+                    <div class="glass-card church-card">
+                        <div class="church-card-image">
+                            {% if church.cover_image %}
+                                <img src="{{ church.cover_image }}" alt="{{ church.name }}">
+                            {% else %}
+                                <div class="church-image-placeholder">
+                                    <i class="fas fa-church"></i>
+                                    <span>Calvary Gospel Church</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="church-info">
+                            <h3 class="church-name">{{ church.name }}</h3>
+                            <ul class="church-meta">
+                                <li>
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{% if church.address %}{{ church.address }}{% else %}<em class="text-muted">Address coming soon</em>{% endif %}</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-phone-alt"></i>
+                                    <span>{% if church.contact %}{{ church.contact }}{% else %}+91 97010 20668{% endif %}</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-clock"></i>
+                                    <span>{% if church.timings %}{{ church.timings }}{% else %}Sunday morning services{% endif %}</span>
+                                </li>
+                            </ul>
+                            <div class="church-actions">
+                                {% if church.map_link %}
+                                    <a href="{{ church.map_link }}" target="_blank" class="btn btn-secondary"><i class="fas fa-map-marked-alt"></i> Location</a>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled><i class="fas fa-map-marked-alt"></i> Coming Soon</button>
+                                {% endif %}
+                                <a href="/church/{{ church.id }}" class="btn btn-primary">Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="coming-soon-wrapper" style="padding: 70px 40px; margin: 0 auto; max-width: 600px;">
+                <i class="fas fa-search-minus coming-soon-icon"></i>
+                <h3 class="coming-soon-title">No branches found</h3>
+                <p class="coming-soon-text">We couldn't find any church branch matching "{{ query }}". Please try searching for a different name or spelling.</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 10px;">Back to Home</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
