@@ -129,26 +129,31 @@ document.addEventListener("DOMContentLoaded", () => {
         
         uploadForm.addEventListener("submit", (e) => {
             if (fileInput && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
                 const sizeLimitImg = 5 * 1024 * 1024; // 5MB
                 const sizeLimitVid = 50 * 1024 * 1024; // 50MB
                 
-                const fileType = file.type;
-                const fileSize = file.size;
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const fileType = file.type;
+                    const fileSize = file.size;
 
-                if (fileType.startsWith("image/")) {
-                    if (fileSize > sizeLimitImg) {
+                    if (fileType.startsWith("image/")) {
+                        if (fileSize > sizeLimitImg) {
+                            e.preventDefault();
+                            showToast(`Image "${file.name}" size must be less than 5MB.`, "error");
+                            return;
+                        }
+                    } else if (fileType.startsWith("video/")) {
+                        if (fileSize > sizeLimitVid) {
+                            e.preventDefault();
+                            showToast(`Video "${file.name}" size must be less than 50MB.`, "error");
+                            return;
+                        }
+                    } else {
                         e.preventDefault();
-                        showToast("Image size must be less than 5MB.", "error");
+                        showToast(`File "${file.name}" is not an allowed type. Only images and videos are allowed.`, "error");
+                        return;
                     }
-                } else if (fileType.startsWith("video/")) {
-                    if (fileSize > sizeLimitVid) {
-                        e.preventDefault();
-                        showToast("Video size must be less than 50MB.", "error");
-                    }
-                } else {
-                    e.preventDefault();
-                    showToast("Only image and video uploads are allowed.", "error");
                 }
             }
         });

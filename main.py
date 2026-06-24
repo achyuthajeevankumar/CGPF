@@ -3,7 +3,7 @@ import shutil
 import json
 from datetime import datetime
 from urllib.parse import quote, unquote
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import FastAPI, Depends, Request, Form, File, UploadFile, HTTPException, status
 from fastapi.responses import RedirectResponse, HTMLResponse
@@ -345,70 +345,82 @@ async def handle_media_upload(
     church_id: int = Form(...),
     title: str = Form(...),
     description: Optional[str] = Form(None),
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
     # Setup response redirect
     response = RedirectResponse(url="/dashboard#my-media", status_code=303)
     
-    # Read size and content validation
-    contents = await file.read()
-    file_size = len(contents)
-    
-    # Check bounds
-    content_type = file.content_type
-    is_image = content_type.startswith("image/")
-    is_video = content_type.startswith("video/")
-    
-    if not (is_image or is_video):
-        set_flash_message(response, "Only image or video uploads are allowed.", "error")
-        return response
+    uploaded_count = 0
+    for file in files:
+        if not file.filename:
+            continue
+            
+        # Read size and content validation
+        contents = await file.read()
+        file_size = len(contents)
         
-    if is_image and file_size > 5 * 1024 * 1024:
-        set_flash_message(response, "Image size must be less than 5MB.", "error")
-        return response
+        # Check bounds
+        content_type = file.content_type
+        is_image = content_type.startswith("image/")
+        is_video = content_type.startswith("video/")
         
-    if is_video and file_size > 50 * 1024 * 1024:
-        set_flash_message(response, "Video size must be less than 50MB.", "error")
-        return response
+        if not (is_image or is_video):
+            set_flash_message(response, f"Only image or video uploads are allowed (skipped {file.filename}).", "error")
+            return response
+            
+        if is_image and file_size > 5 * 1024 * 1024:
+            set_flash_message(response, f"Image {file.filename} size must be less than 5MB.", "error")
+            return response
+            
+        if is_video and file_size > 50 * 1024 * 1024:
+            set_flash_message(response, f"Video {file.filename} size must be less than 50MB.", "error")
+            return response
+            
+        # Reset read pointer
+        await file.seek(0)
         
-    # Reset read pointer
-    await file.seek(0)
-    
-    # Save file
-    timestamp = int(datetime.utcnow().timestamp())
-    filename = f"{timestamp}_{file.filename.replace(' ', '_')}"
-    relative_path = f"/static/uploads/media/{filename}"
-    full_path = os.path.join("static", "uploads", "media", filename)
-    
-    try:
-        with open(full_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-    except Exception as e:
-        set_flash_message(response, "Failed to write file to storage.", "error")
-        return response
+        # Save file
+        timestamp = int(datetime.utcnow().timestamp())
+        # Append index to guarantee uniqueness even if uploaded in the same second
+        filename = f"{timestamp}_{uploaded_count}_{file.filename.replace(' ', '_')}"
+        relative_path = f"/static/uploads/media/{filename}"
+        full_path = os.path.join("static", "uploads", "media", filename)
         
-    # Write to DB
-    media = models.Media(
-        church_id=church_id,
-        uploader_id=current_user.id,
-        title=title,
-        description=description,
-        file_path=relative_path,
-        file_type="image" if is_image else "video",
-        status="pending"  # Needs admin approval
-    )
-    db.add(media)
-    db.commit()
-    db.refresh(media)
-    
-    # Log audit
-    audit = models.AuditLog(user_id=current_user.id, action="uploaded_media", target_type="media", target_id=media.id)
-    db.add(audit)
-    db.commit()
-    
-    set_flash_message(response, "Media uploaded successfully! Awaiting administrator approval.", "success")
+        try:
+            with open(full_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+        except Exception as e:
+            set_flash_message(response, f"Failed to write file {file.filename} to storage.", "error")
+            return response
+            
+        # Write to DB
+        media = models.Media(
+            church_id=church_id,
+            uploader_id=current_user.id,
+            title=title,
+            description=description,
+            file_path=relative_path,
+            file_type="image" if is_image else "video",
+            status="pending"  # Needs admin approval
+        )
+        db.add(media)
+        db.commit()
+        db.refresh(media)
+        
+        # Log audit
+        audit = models.AuditLog(user_id=current_user.id, action="uploaded_media", target_type="media", target_id=media.id)
+        db.add(audit)
+        db.commit()
+        
+        uploaded_count += 1
+        
+    if uploaded_count > 0:
+        set_flash_message(response, f"Successfully uploaded {uploaded_count} media item(s)! Awaiting administrator approval.", "success")
+    else:
+        set_flash_message(response, "No files were uploaded.", "warning")
+        
     return response
 
 @app.post("/media/delete/{id}")
