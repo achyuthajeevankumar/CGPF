@@ -118,6 +118,85 @@ async def add_session_and_settings(request: Request, call_next):
 # PUBLIC ROUTER
 # ==============================================================================
 
+@app.get("/debug-db-run")
+def debug_db_run():
+    from sqlalchemy import text
+    db = SessionLocal()
+    try:
+        # Run raw SQL to check tables
+        result = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';"))
+        tables = [row[0] for row in result]
+        
+        # Check if tables exist
+        counts = {}
+        for table in tables:
+            try:
+                res = db.execute(text(f"SELECT COUNT(*) FROM {table};"))
+                counts[table] = res.scalar()
+            except Exception as e:
+                counts[table] = f"Error: {str(e)}"
+                
+        # Try to run seed logic and print exactly what it does
+        seed_logs = []
+        import models
+        from auth import hash_password
+        
+        # Let's seed manually here to see exactly where it fails or succeeds!
+        admin_user = db.query(models.User).filter(models.User.username == "admin").first()
+        if not admin_user:
+            admin_user = models.User(
+                username="admin",
+                email="admin@calvarygospel.org",
+                password_hash=hash_password("adminpassword123"),
+                role="admin"
+            )
+            db.add(admin_user)
+            db.commit()
+            seed_logs.append("Admin created")
+        else:
+            seed_logs.append("Admin already exists")
+            
+        church_count = db.query(models.Church).count()
+        if church_count == 0:
+            initial_churches = [
+                {"name": "Dubacherla", "address": "Dubacharala Gandhi colony", "map_link": "https://maps.app.goo.gl/q2v12ih589cvSZrC6", "contact": "+91 97010 20668", "timings": "Sunday morning 6:00 to 8:30, Saturday night 7:00 to 10:00", "about": "Welcome to Calvary Gospel Prayer Fellowship in Dubacherla."},
+                {"name": "Ramachandrapuram", "address": "Ramachandrapuram", "map_link": "https://maps.app.goo.gl/n3LddBQUWJqH7TtC9", "contact": "+91 97010 20668", "timings": "Sunday morning 11:00 to 1:00", "about": "Welcome to our Ramachandrapuram branch."},
+                {"name": "Marelamudi", "address": "Marelamudi", "map_link": "https://maps.app.goo.gl/rKteXgSXBUyUsRJH6", "contact": "+91 97010 20668", "timings": "Sunday morning 12:30 to 2:00", "about": "Welcome to Marelamudi Calvary Gospel branch."},
+                {"name": "Dubacherla Colony", "address": "Dubacherla Colony", "map_link": "https://maps.app.goo.gl/q2v12ih589cvSZrC6", "contact": "+91 97010 20668", "timings": "Sunday morning 8:00 to 10:00", "about": "Our Dubacherla Colony branch is growing."}
+            ]
+            for c in initial_churches:
+                church = models.Church(
+                    name=c["name"],
+                    address=c["address"],
+                    map_link=c["map_link"],
+                    contact=c["contact"],
+                    timings=c["timings"],
+                    about=c["about"]
+                )
+                db.add(church)
+                db.commit()
+                seed_logs.append(f"Seeded church {c['name']}")
+        else:
+            seed_logs.append(f"Churches already exist: {church_count}")
+            
+        # Re-query
+        re_tables = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';"))
+        re_counts = {}
+        for table in [row[0] for row in re_tables]:
+            res = db.execute(text(f"SELECT COUNT(*) FROM {table};"))
+            re_counts[table] = res.scalar()
+            
+        return {
+            "tables": tables,
+            "initial_counts": counts,
+            "seed_logs": seed_logs,
+            "final_counts": re_counts
+        }
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        db.close()
+
 @app.get("/debug-db")
 def debug_db(db: Session = Depends(get_db)):
     db_type = "PostgreSQL" if "postgresql" in str(db.bind.url) else "SQLite"
