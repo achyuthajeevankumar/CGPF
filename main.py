@@ -135,6 +135,7 @@ def debug_db_run():
                 counts[table] = res.scalar()
             except Exception as e:
                 counts[table] = f"Error: {str(e)}"
+                db.rollback()
                 
         # Try to run seed logic and print exactly what it does
         seed_logs = []
