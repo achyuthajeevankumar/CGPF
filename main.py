@@ -15,10 +15,16 @@ import models
 import auth
 from database import engine, get_db, SessionLocal
 
+import cloudinary
+import cloudinary.uploader
+
+# Configure Cloudinary (automatically loads CLOUDINARY_URL env var if present)
+cloudinary.config(secure=True)
+
 # Initialize Database tables
 models.Base.metadata.create_all(bind=engine)
 
-# Ensure upload folders exist
+# Ensure local upload folders exist (as a local fallback or legacy)
 os.makedirs("static/uploads/churches", exist_ok=True)
 os.makedirs("static/uploads/media", exist_ok=True)
 os.makedirs("static/uploads/profiles", exist_ok=True)
@@ -381,19 +387,37 @@ async def handle_media_upload(
         # Reset read pointer
         await file.seek(0)
         
-        # Save file
-        timestamp = int(datetime.utcnow().timestamp())
-        # Append index to guarantee uniqueness even if uploaded in the same second
-        filename = f"{timestamp}_{uploaded_count}_{file.filename.replace(' ', '_')}"
-        relative_path = f"/static/uploads/media/{filename}"
-        full_path = os.path.join("static", "uploads", "media", filename)
-        
-        try:
-            with open(full_path, "wb") as f:
-                shutil.copyfileobj(file.file, f)
-        except Exception as e:
-            set_flash_message(response, f"Failed to write file {file.filename} to storage.", "error")
-            return response
+        # Save file (Cloudinary if CLOUDINARY_URL exists, otherwise local fallback)
+        use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+        if use_cloudinary:
+            try:
+                if is_video:
+                    upload_result = cloudinary.uploader.upload_large(
+                        file.file,
+                        resource_type="video",
+                        folder="cgpf/media"
+                    )
+                else:
+                    upload_result = cloudinary.uploader.upload(
+                        file.file,
+                        resource_type="image",
+                        folder="cgpf/media"
+                    )
+                relative_path = upload_result.get("secure_url")
+            except Exception as e:
+                set_flash_message(response, f"Cloudinary upload failed for {file.filename}: {str(e)}", "error")
+                return response
+        else:
+            timestamp = int(datetime.utcnow().timestamp())
+            filename = f"{timestamp}_{uploaded_count}_{file.filename.replace(' ', '_')}"
+            relative_path = f"/static/uploads/media/{filename}"
+            full_path = os.path.join("static", "uploads", "media", filename)
+            try:
+                with open(full_path, "wb") as f:
+                    shutil.copyfileobj(file.file, f)
+            except Exception as e:
+                set_flash_message(response, f"Failed to write file {file.filename} to local storage.", "error")
+                return response
             
         # Write to DB
         media = models.Media(
@@ -519,13 +543,29 @@ def admin_add_church(
         
     cover_path = None
     if cover_image and cover_image.filename:
-        timestamp = int(datetime.utcnow().timestamp())
-        filename = f"{timestamp}_{cover_image.filename.replace(' ', '_')}"
-        cover_path = f"/static/uploads/churches/{filename}"
-        full_path = os.path.join("static", "uploads", "churches", filename)
-        
-        with open(full_path, "wb") as f:
-            shutil.copyfileobj(cover_image.file, f)
+        use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+        if use_cloudinary:
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    cover_image.file,
+                    resource_type="image",
+                    folder="cgpf/churches"
+                )
+                cover_path = upload_result.get("secure_url")
+            except Exception as e:
+                set_flash_message(response, f"Cloudinary upload failed for cover image: {str(e)}", "error")
+                return response
+        else:
+            timestamp = int(datetime.utcnow().timestamp())
+            filename = f"{timestamp}_{cover_image.filename.replace(' ', '_')}"
+            cover_path = f"/static/uploads/churches/{filename}"
+            full_path = os.path.join("static", "uploads", "churches", filename)
+            try:
+                with open(full_path, "wb") as f:
+                    shutil.copyfileobj(cover_image.file, f)
+            except Exception as e:
+                set_flash_message(response, "Failed to write cover image to local storage.", "error")
+                return response
             
     church = models.Church(
         name=name,
@@ -574,20 +614,39 @@ def admin_edit_church(
     church.about = about
     
     if cover_image and cover_image.filename:
-        # Delete old file
+        # Delete old file if it was stored locally
         if church.cover_image:
             old_rel = church.cover_image.lstrip("/")
-            if os.path.exists(old_rel):
-                os.remove(old_rel)
+            if not old_rel.startswith("http") and os.path.exists(old_rel):
+                try:
+                    os.remove(old_rel)
+                except Exception:
+                    pass
                 
-        timestamp = int(datetime.utcnow().timestamp())
-        filename = f"{timestamp}_{cover_image.filename.replace(' ', '_')}"
-        cover_path = f"/static/uploads/churches/{filename}"
-        full_path = os.path.join("static", "uploads", "churches", filename)
-        
-        with open(full_path, "wb") as f:
-            shutil.copyfileobj(cover_image.file, f)
-        church.cover_image = cover_path
+        use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+        if use_cloudinary:
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    cover_image.file,
+                    resource_type="image",
+                    folder="cgpf/churches"
+                )
+                church.cover_image = upload_result.get("secure_url")
+            except Exception as e:
+                set_flash_message(response, f"Cloudinary upload failed for cover image: {str(e)}", "error")
+                return response
+        else:
+            timestamp = int(datetime.utcnow().timestamp())
+            filename = f"{timestamp}_{cover_image.filename.replace(' ', '_')}"
+            cover_path = f"/static/uploads/churches/{filename}"
+            full_path = os.path.join("static", "uploads", "churches", filename)
+            try:
+                with open(full_path, "wb") as f:
+                    shutil.copyfileobj(cover_image.file, f)
+                church.cover_image = cover_path
+            except Exception as e:
+                set_flash_message(response, "Failed to write cover image to local storage.", "error")
+                return response
         
     db.commit()
     
@@ -705,20 +764,39 @@ def admin_update_founder(
     founder.highlights = highlights
     
     if photo and photo.filename:
-        # Delete old photo
+        # Delete old photo if it was stored locally
         if founder.photo:
             old_rel = founder.photo.lstrip("/")
-            if os.path.exists(old_rel):
-                os.remove(old_rel)
+            if not old_rel.startswith("http") and os.path.exists(old_rel):
+                try:
+                    os.remove(old_rel)
+                except Exception:
+                    pass
                 
-        timestamp = int(datetime.utcnow().timestamp())
-        filename = f"{timestamp}_founder_{photo.filename.replace(' ', '_')}"
-        photo_path = f"/static/uploads/profiles/{filename}"
-        full_path = os.path.join("static", "uploads", "profiles", filename)
-        
-        with open(full_path, "wb") as f:
-            shutil.copyfileobj(photo.file, f)
-        founder.photo = photo_path
+        use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+        if use_cloudinary:
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    photo.file,
+                    resource_type="image",
+                    folder="cgpf/profiles"
+                )
+                founder.photo = upload_result.get("secure_url")
+            except Exception as e:
+                set_flash_message(response, f"Cloudinary upload failed for founder photo: {str(e)}", "error")
+                return response
+        else:
+            timestamp = int(datetime.utcnow().timestamp())
+            filename = f"{timestamp}_founder_{photo.filename.replace(' ', '_')}"
+            photo_path = f"/static/uploads/profiles/{filename}"
+            full_path = os.path.join("static", "uploads", "profiles", filename)
+            try:
+                with open(full_path, "wb") as f:
+                    shutil.copyfileobj(photo.file, f)
+                founder.photo = photo_path
+            except Exception as e:
+                set_flash_message(response, "Failed to write photo to local storage.", "error")
+                return response
         
     db.commit()
     
@@ -755,20 +833,39 @@ def admin_update_pastor(
     pastor.message = message
     
     if photo and photo.filename:
-        # Delete old photo
+        # Delete old photo if it was stored locally
         if pastor.photo:
             old_rel = pastor.photo.lstrip("/")
-            if os.path.exists(old_rel):
-                os.remove(old_rel)
+            if not old_rel.startswith("http") and os.path.exists(old_rel):
+                try:
+                    os.remove(old_rel)
+                except Exception:
+                    pass
                 
-        timestamp = int(datetime.utcnow().timestamp())
-        filename = f"{timestamp}_pastor_{photo.filename.replace(' ', '_')}"
-        photo_path = f"/static/uploads/profiles/{filename}"
-        full_path = os.path.join("static", "uploads", "profiles", filename)
-        
-        with open(full_path, "wb") as f:
-            shutil.copyfileobj(photo.file, f)
-        pastor.photo = photo_path
+        use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+        if use_cloudinary:
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    photo.file,
+                    resource_type="image",
+                    folder="cgpf/profiles"
+                )
+                pastor.photo = upload_result.get("secure_url")
+            except Exception as e:
+                set_flash_message(response, f"Cloudinary upload failed for pastor photo: {str(e)}", "error")
+                return response
+        else:
+            timestamp = int(datetime.utcnow().timestamp())
+            filename = f"{timestamp}_pastor_{photo.filename.replace(' ', '_')}"
+            photo_path = f"/static/uploads/profiles/{filename}"
+            full_path = os.path.join("static", "uploads", "profiles", filename)
+            try:
+                with open(full_path, "wb") as f:
+                    shutil.copyfileobj(photo.file, f)
+                pastor.photo = photo_path
+            except Exception as e:
+                set_flash_message(response, "Failed to write photo to local storage.", "error")
+                return response
         
     db.commit()
     
