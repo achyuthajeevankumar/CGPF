@@ -118,6 +118,33 @@ async def add_session_and_settings(request: Request, call_next):
 # PUBLIC ROUTER
 # ==============================================================================
 
+@app.get("/debug-db")
+def debug_db(db: Session = Depends(get_db)):
+    db_type = "PostgreSQL" if "postgresql" in str(db.bind.url) else "SQLite"
+    churches_count = db.query(models.Church).count()
+    users_count = db.query(models.User).count()
+    settings_count = db.query(models.Settings).count()
+    
+    seeded = False
+    if churches_count == 0:
+        try:
+            import seed
+            seed.seed_database()
+            seeded = True
+            churches_count = db.query(models.Church).count()
+            users_count = db.query(models.User).count()
+        except Exception as e:
+            return {"error": f"Seeding failed: {str(e)}", "db_type": db_type}
+            
+    return {
+        "db_type": db_type,
+        "database_url_configured": bool(os.environ.get("DATABASE_URL")),
+        "churches_count": churches_count,
+        "users_count": users_count,
+        "settings_count": settings_count,
+        "auto_seeded": seeded
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
     churches = db.query(models.Church).all()
