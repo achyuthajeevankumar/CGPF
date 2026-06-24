@@ -1,3 +1,11 @@
+import bcrypt
+if not hasattr(bcrypt, "__about__"):
+    class About:
+        pass
+    about = About()
+    about.__version__ = getattr(bcrypt, "__version__", "4.0.0")
+    bcrypt.__about__ = about
+
 import models
 from database import engine, SessionLocal
 from auth import hash_password

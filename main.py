@@ -1,4 +1,19 @@
 import os
+import bcrypt
+
+# Patch bcrypt for passlib compatibility in newer python environments
+if not hasattr(bcrypt, "__about__"):
+    class About:
+        pass
+    about = About()
+    about.__version__ = getattr(bcrypt, "__version__", "4.0.0")
+    bcrypt.__about__ = about
+
+# Clean CLOUDINARY_URL from env if invalid (e.g. empty string or placeholder) to prevent Cloudinary SDK from crashing on import
+cloudinary_url = os.environ.get("CLOUDINARY_URL")
+if cloudinary_url and not cloudinary_url.startswith("cloudinary://"):
+    os.environ.pop("CLOUDINARY_URL", None)
+
 import shutil
 import json
 from datetime import datetime
