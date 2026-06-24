@@ -123,8 +123,8 @@ def debug_db_run():
     from sqlalchemy import text
     db = SessionLocal()
     try:
-        # Run raw SQL to check tables
-        result = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';"))
+        # Run raw SQL to check tables in public schema
+        result = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public';"))
         tables = [row[0] for row in result]
         
         # Check if tables exist
@@ -180,8 +180,8 @@ def debug_db_run():
         else:
             seed_logs.append(f"Churches already exist: {church_count}")
             
-        # Re-query
-        re_tables = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';"))
+        # Re-query public schema tables
+        re_tables = db.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public';"))
         re_counts = {}
         for table in [row[0] for row in re_tables]:
             res = db.execute(text(f"SELECT COUNT(*) FROM {table};"))
