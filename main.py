@@ -120,6 +120,23 @@ async def add_session_and_settings(request: Request, call_next):
 
 
 
+@app.get("/storage-check")
+def storage_check(db: Session = Depends(get_db)):
+    media_items = db.query(models.Media).all()
+    sample_urls = [item.file_path for item in media_items[:10]]
+    
+    use_cloudinary = bool(os.environ.get("CLOUDINARY_URL"))
+    cloudinary_url = os.environ.get("CLOUDINARY_URL")
+    cloudinary_url_preview = cloudinary_url[:25] + "..." if cloudinary_url else None
+    
+    return {
+        "use_cloudinary_bool": use_cloudinary,
+        "cloudinary_url_preview": cloudinary_url_preview,
+        "database_type": "PostgreSQL" if "postgresql" in str(db.bind.url) else "SQLite",
+        "total_media_count": len(media_items),
+        "sample_urls": sample_urls
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
     churches = db.query(models.Church).all()
